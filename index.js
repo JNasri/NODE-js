@@ -1,9 +1,19 @@
-// import the 'format' from date-fns
-const { format } = require("date-fns");
-// import the version4 of uuid 
-const { v4: uuid } = require("uuid");
+// require the logEvents we did
+const logEvents = require("./logEvents");
 
-// M = months ****  m = minutes
-console.log(format(new Date(), "yyyy - MM - dd - HH:mm:ss"));
+// EventEmitter clas
+const EventEmitter = require("events");
+class MyEmitter extends EventEmitter {}
 
-console.log(uuid());
+// initialize object
+const myEmitter = new MyEmitter();
+
+// add listener for the log event
+// and send the 'msg' as parameter to the logEvents
+myEmitter.on("log", (msg) => logEvents(msg));
+
+// timeout of 2s if the log failed
+setTimeout(() => {
+  // Emit event
+  myEmitter.emit("log", "Log event Emitted! \n");
+}, 2000);
