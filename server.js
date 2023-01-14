@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /* THE EMITTER PART*/
 // require the logEvents we did
 const logEvents = require("./logEvents");
@@ -162,20 +161,3 @@ const server = http.createServer((req, res) => {
 // which is the function written above
 // note: this should be always at the end of server.js file
 server.listen(PORT, () => console.log(`server running on port : ${PORT}`));
-=======
-console.log("Hello World");
-// console.log(global);
-const os = require("os");
-const path = require("path");
-const math = require("./math");
-
-console.log(math.add(3, 3));
-
-// console.log(os.type());
-// console.log(os.version());
-// console.log(os.homedir());
-// console.log(__dirname);
-// console.log(__filename);
-
-// console.log(path.parse(__filename));
->>>>>>> parent of a06b035 (npm in Node)
