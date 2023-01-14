@@ -9,11 +9,12 @@ const fsPromises = require("fs").promises;
 const path = require("path");
 
 // log events with a message parameter
-const logEvents = async (message) => {
+const logEvents = async (message, logName) => {
   // M = months ****  m = minutes
   const dateTime = format(new Date(), "yyyy-MM-dd HH:mm:ss");
   const id = uuid();
   const logItem = dateTime + "\t\t" + id + "\t\t" + message;
+  // FOR TESTING
   console.log(logItem);
   try {
     // if 'logs' dir doesn't exist, create one
@@ -21,10 +22,7 @@ const logEvents = async (message) => {
       await fsPromises.mkdir(path.join(__dirname, "logs"));
     }
     // add to the log the logItem we creted above
-    await fsPromises.appendFile(
-      path.join(__dirname, "logs", "eventLog.txt"),
-      logItem
-    );
+    await fsPromises.appendFile(path.join(__dirname, "logs", logName), logItem);
   } catch (err) {
     console.log(err);
   }
