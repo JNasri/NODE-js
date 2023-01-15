@@ -1,3 +1,0 @@
-2023-01-11 19:03:09		fe0746b8-1dd4-452d-8d64-dcac2ddea93b		/data/data.json	GET 
-2023-01-11 19:03:22		cc2cd1d6-ebaf-43a9-821e-3db94e3bf5bf		/data/data.json	GET 
-2023-01-11 19:03:30		b0ad6647-21cb-48ed-86fd-ee0888380f32		/data/data.txt	GET 

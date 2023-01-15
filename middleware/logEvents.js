@@ -18,15 +18,32 @@ const logEvents = async (message, logName) => {
   console.log(logItem);
   try {
     // if 'logs' dir doesn't exist, create one
-    if (!fs.existsSync(path.join(__dirname, "logs"))) {
-      await fsPromises.mkdir(path.join(__dirname, "logs"));
+    // UPDATE: '..' is to go to previous dir
+    if (!fs.existsSync(path.join(__dirname, "..", "logs"))) {
+      await fsPromises.mkdir(path.join(__dirname, "..", "logs"));
     }
     // add to the log the logItem we creted above
-    await fsPromises.appendFile(path.join(__dirname, "logs", logName), logItem);
+    await fsPromises.appendFile(
+      path.join(__dirname, "..", "logs", logName),
+      logItem
+    );
   } catch (err) {
     console.log(err);
   }
 };
 
+const logger = (req, res, next) => {
+  // append it to file using fs (we did that in logEvent.js)
+  logEvents(
+    ` ${req.method} \t ${req.headers.origin} \t ${req.url} \n`,
+    "reqLog.txt"
+  );
+  // log what we need to console (for testing)
+  console.log(` ${req.method} \t ${req.path} `);
+
+  //call next to go to next
+  next();
+};
+
 // export the logEvents to require it in index.js
-module.exports = logEvents;
+module.exports = { logger, logEvents };
