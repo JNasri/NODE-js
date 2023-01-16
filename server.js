@@ -64,63 +64,18 @@ app.use(express.json());
 
 // this middleware to handle serve static files (css, images, js files...)
 app.use(express.static(path.join(__dirname, "/public")));
+// same middleware for the subdir folder
+app.use("/subdir", express.static(path.join(__dirname, "/public")));
 
-//
-// this segment is for intro to express (1)
-//
-// express takes regExp as the route so you can specify
-// ^/$ ==only / OR index(.html)? ?== 0 or 1
-app.get("^/$|/index(.html)?", (req, res) => {
-  // these are two ways to call files, all works the same
-  // res.sendFile("./views/index.html", { root: __dirname });
-  res.sendFile(path.join(__dirname, "views", "index.html"));
-});
+// provide the route we did in the route folder to handle
+// requests for the root
+app.use("/", require("./routes/root"));
 
-// define new page
-app.get("/new-page(.html)?", (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "new-page.html"));
-});
+// provide the route we did in the route folder to handle
+// requests for any subdir file
+app.use("/subdir", require("./routes/subdir"));
 
-// now lets try to redirect the old page
-// to the new page like we did in old-server
-app.get("/old-page(.html)?", (req, res) => {
-  // 302 be default , but we make it 301 to tell search engines
-  // to know that old page has moved to new page
-  res.redirect(301, "/new-page.html");
-});
-
-//
-// Nested Route
-//
-
-// nested route handlers , we can see a new parameter 'next'
-// which we execute at the end to start the next route
-app.get(
-  "/hello(.html)?",
-  (req, res, next) => {
-    console.log("attempted to load hello.html");
-    next();
-  },
-  (req, res) => {
-    res.send("Hello World!");
-  }
-);
-
-// another way is to define the methods befor like this:
-const one = (req, res, next) => {
-  console.log("one");
-  next();
-};
-const two = (req, res, next) => {
-  console.log("two");
-  next();
-};
-const three = (req, res) => {
-  console.log("three");
-  res.send("finished!!");
-};
-// then call them like array as parameter
-app.get("/chain(.html)?", [one, two, three]);
+app.use("/employees", require("./routes/api/employees"));
 
 //
 // at the end, any other requests will go to 404
