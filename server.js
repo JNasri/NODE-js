@@ -8,6 +8,8 @@ const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
 // require the 3rd party MW (3rd type of MW)
 const cors = require("cors");
+// UPDATE : import corsOptions after moving it to config file to tide things up
+const corsOptions = require("./config/corsOptions");
 
 // fisrt we need to define a port for our web server,
 // the port we are using for Node/Nodemon is for dev
@@ -34,23 +36,6 @@ const PORT = process.env.PORT || 3500;
 // we improved the logger to be in the mw folder (check it)
 app.use(logger);
 
-// THIRD TYPE OF MW: 3rd party middleware (cors) //
-// CORS = Cross Origin Resource Sharing
-// but first, we create a list of domains allowed to access the backend
-// that cors will not prevent (liveServer in VSCode , localhost...etc)
-const whitelist = ["http://127.0.0.0:5500", "http://localhost:3500"];
-const corsOptions = {
-  // get the origin of the request
-  origin: (origin, callback) => {
-    // if its from the whitelist OR it has no origin(localhost), allow it
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error("not allowed by cors"));
-    }
-  },
-  optionSuccessStatus: 200,
-};
 // then we use this 3rd party mw with our options
 app.use(cors(corsOptions));
 
@@ -66,15 +51,13 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "/public")));
 // same middleware for the subdir folder
 app.use("/subdir", express.static(path.join(__dirname, "/public")));
-
 // provide the route we did in the route folder to handle
 // requests for the root
-app.use("/", require("./routes/root"));
 
+app.use("/", require("./routes/root"));
 // provide the route we did in the route folder to handle
 // requests for any subdir file
 app.use("/subdir", require("./routes/subdir"));
-
 app.use("/employees", require("./routes/api/employees"));
 
 //
