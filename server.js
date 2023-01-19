@@ -60,6 +60,12 @@ app.use("/", require("./routes/root"));
 app.use("/subdir", require("./routes/subdir"));
 app.use("/employees", require("./routes/api/employees"));
 
+// UPDATE : added the 'register new user' route
+app.use("/register", require("./routes/register"));
+
+// UPDATE : added the 'authenticatoin of user' route
+app.use("/auth", require("./routes/auth"));
+
 //
 // at the end, any other requests will go to 404
 // * == all
