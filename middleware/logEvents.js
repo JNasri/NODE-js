@@ -1,3 +1,7 @@
+//
+// This middleWare is to emmit log events
+//
+
 // import the 'format' from date-fns
 const { format } = require("date-fns");
 // import the version4 of uuid

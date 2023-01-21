@@ -11,7 +11,7 @@ const router = express.Router();
 const path = require("path");
 
 // UPDATE: import the controller after converting to MVC
-const employeesCont = require('../../controllers/employeesCont');
+const employeesCont = require("../../controllers/employeesCont");
 
 // this is a very good way to handle any http request, rahter than router.get,router.post
 // we can have router.route() and specify the http request below

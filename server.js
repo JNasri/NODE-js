@@ -3,13 +3,18 @@ const express = require("express");
 // make the app (server) , so instead of 'server' we use 'app'
 const app = express();
 const path = require("path");
-// require the new logEvent file form the new path
+// require the new logEvent middleWare form the new path + errorHandler
 const { logger } = require("./middleware/logEvents");
 const errorHandler = require("./middleware/errorHandler");
+// UPDATE: require the middleware to verify the JWTs
+const verifyJWT = require("./middleware/verifyJWT");
+// UPDATE: require the cookie parser for the refresh token
+const cookieParser = require("cookie-parser");
 // require the 3rd party MW (3rd type of MW)
 const cors = require("cors");
 // UPDATE : import corsOptions after moving it to config file to tide things up
 const corsOptions = require("./config/corsOptions");
+const credentials = require("./middleware/credentials");
 
 // fisrt we need to define a port for our web server,
 // the port we are using for Node/Nodemon is for dev
@@ -36,6 +41,9 @@ const PORT = process.env.PORT || 3500;
 // we improved the logger to be in the mw folder (check it)
 app.use(logger);
 
+// UPDATE: added MW of credentials (must be used before cors)
+app.use(credentials);
+
 // then we use this 3rd party mw with our options
 app.use(cors(corsOptions));
 
@@ -44,8 +52,11 @@ app.use(cors(corsOptions));
 // this middleware to handle url encoded data
 app.use(express.urlencoded({ extended: false }));
 
-// this middleware to hanle json data
+// this middleware to handle json data
 app.use(express.json());
+
+// this middleware to handle cookies
+app.use(cookieParser());
 
 // this middleware to handle serve static files (css, images, js files...)
 app.use(express.static(path.join(__dirname, "/public")));
@@ -58,13 +69,20 @@ app.use("/", require("./routes/root"));
 // provide the route we did in the route folder to handle
 // requests for any subdir file
 app.use("/subdir", require("./routes/subdir"));
-app.use("/employees", require("./routes/api/employees"));
-
 // UPDATE : added the 'register new user' route
 app.use("/register", require("./routes/register"));
-
 // UPDATE : added the 'authenticatoin of user' route
 app.use("/auth", require("./routes/auth"));
+// UPDATE : added the 'logout of user' route
+app.use("/logout", require("./routes/logout"));
+// UPDATE : added the 'refresh token of user' route
+app.use("/refresh", require("./routes/refresh"));
+//
+//
+// anything after the verifyJWT require a JWT token to access
+app.use(verifyJWT); // verify only in the employees route
+// this is why i moved all other routes to the top, only this route should be verified
+app.use("/employees", require("./routes/api/employees"));
 
 //
 // at the end, any other requests will go to 404
