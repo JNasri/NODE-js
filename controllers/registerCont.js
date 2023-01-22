@@ -44,6 +44,8 @@ const handleNewUser = async (req, res) => {
     //create object of the new user
     const newUser = {
       Username: user,
+      // UPDATED : add the user role for each new regist as 'user'
+      roles: { User: 2001 },
       Password: hashedPWD,
     };
     // add it to the usersDB

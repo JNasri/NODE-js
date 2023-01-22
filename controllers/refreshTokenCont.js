@@ -47,9 +47,19 @@ const handleRefreshToken = (req, res) => {
       if (err || foundUser.Username !== decoded.Username)
         return res.sendStatus(403);
       // create a new access token after the refresh token if verified
+      //
+
+      // here we must get the user roles of the found user
+      const UserRoles = Object.values(foundUser.roles);
       const accessTokne = jwt.sign(
         // 1: payload (our username) , do not pass sensitive info (like pwd)
-        { Username: decoded.Username },
+        // UPDATED: add the user roles to the payload
+        {
+          UserInfo: {
+            Username: foundUser.Username,
+            roles: UserRoles,
+          },
+        },
         // 2: we need the access token secret to create a token
         process.env.ACCESS_TOKEN_SECRET,
         // 3: expiration time

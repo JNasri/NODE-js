@@ -39,13 +39,20 @@ const handleLogin = async (req, res) => {
   // compare the password given with the passowrd of the foundUser
   const match = await bcrypt.compare(pwd, foundUser.Password);
   if (match) {
-    // here we should create JWTs (later on)
+    // here we must get the user roles of the found user
+    const UserRoles = Object.values(foundUser.roles); 
 
     // 1st : Access Token
     //
     const accessToken = jwt.sign(
       // 1: payload (our username) , do not pass sensitive info (like pwd)
-      { Username: foundUser.Username },
+      // UPDATED: add the user roles to the payload
+      {
+        UserInfo: {
+          Username: foundUser.Username,
+          roles: UserRoles,
+        },
+      },
       // 2: we need the access token secret to create a token
       process.env.ACCESS_TOKEN_SECRET,
       // 3: expiration time
@@ -93,6 +100,8 @@ const handleLogin = async (req, res) => {
         maxAge: 24 * 60 * 60 * 1000, // this is equal to 1 day
         sameSite: "None", // added new (for the front end )
         secure: true, // added new (for the front end ) so it be http(s)
+        // note that secure: true doesn't work with thoudnerClinet (dev test)
+        // but will work in real porjects
       }
     );
     res.json({ accessToken }); // in the front end , this must be stored in the memory
