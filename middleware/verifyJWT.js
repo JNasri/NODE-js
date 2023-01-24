@@ -2,9 +2,8 @@
 // This middleWare is to verify JWTs
 //
 
-// require the jwt and dotenv configuratoins
+// require the jwt
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 
 const verifyJWT = (req, res, next) => {
   // get the whole auth header from the request that came in

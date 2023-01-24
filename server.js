@@ -1,3 +1,5 @@
+// Update : moved the .env require here and deleted it from all other places
+require("dotenv").config();
 // require the framework 'express'
 const express = require("express");
 // make the app (server) , so instead of 'server' we use 'app'
@@ -15,6 +17,13 @@ const cors = require("cors");
 // UPDATE : import corsOptions after moving it to config file to tide things up
 const corsOptions = require("./config/corsOptions");
 const credentials = require("./middleware/credentials");
+// Mongoose library for MongoDB require
+const mongoose = require("mongoose");
+// Connection to MongoDB using mongoose require
+const connectDB = require("./config/dbConn");
+
+// connect to mongoDB
+connectDB();
 
 // fisrt we need to define a port for our web server,
 // the port we are using for Node/Nodemon is for dev
@@ -111,4 +120,10 @@ app.use(errorHandler);
 // when a request happen at the PORT number, it will run http.createServer
 // which is the function written above
 // note: this should be always at the end of server.js file
-app.listen(PORT, () => console.log(`server running on port : ${PORT}`));
+//
+// UPDATE: after adding the mongoDB, we need to make suer that
+// we only start listening for requests after we established a DB connection
+mongoose.connection.once("open", () => {
+  console.log("Connected to MongoDB Successfully!");
+  app.listen(PORT, () => console.log(`server running on port : ${PORT}`));
+});

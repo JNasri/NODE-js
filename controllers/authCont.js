@@ -13,9 +13,8 @@ const usersDB = {
 // import bcrypt to unhash password
 const bcrypt = require("bcrypt");
 
-// the below imports are from the JWT learning section
+// the below import is from the JWT learning section
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 // we need fs to clone a database (still no DB at this point)
 const fsP = require("fs").promises;
 const path = require("path");
@@ -40,7 +39,7 @@ const handleLogin = async (req, res) => {
   const match = await bcrypt.compare(pwd, foundUser.Password);
   if (match) {
     // here we must get the user roles of the found user
-    const UserRoles = Object.values(foundUser.roles); 
+    const UserRoles = Object.values(foundUser.roles);
 
     // 1st : Access Token
     //

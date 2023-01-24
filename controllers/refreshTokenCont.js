@@ -11,9 +11,8 @@ const usersDB = {
   },
 };
 
-// the below imports are from the JWT learning section
+// the below import is from the JWT learning section
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 
 const handleRefreshToken = (req, res) => {
   // get the cookies from the request
