@@ -34,7 +34,7 @@ const handleNewUser = async (req, res) => {
   // this variable is going to be true if username is found
 
   // ****UPDATED AFTER SWITCHING TO MONGODB****
-  const duplicate = await User.findOne({ Username: user }).exec();
+  const duplicate = await User.findOne({ username: user }).exec();
   if (duplicate) {
     return res
       .status(409) // 409 *conflict*

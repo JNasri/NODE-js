@@ -9,103 +9,109 @@
 
 // get the data
 // UPDATE : now we will change the code to actually work when we add,read,delete...
-const data = {
-  employees: require("../model/employees.json"),
-  setEmployees: function (data) {
-    this.employees = data;
-  },
-};
 
-const getAllEmployees = (req, res) => {
-  // return all employees in the file
-  res.json(data.employees);
+// MongoDB CODE:
+const Employee = require("./../model/Employee");
+// UPDATE: no need for the below code because we switched to MongoDB
+// const data = {
+//   employees: require("../model/employees.json"),
+//   setEmployees: function (data) {
+//     this.employees = data;
+//   },
+// };
+
+const getAllEmployees = async (req, res) => {
+  // MONGO DB :
+  // an empty find() function returns all records
+  const employees = await Employee.find();
+  // if no employees found
+  if (!employees) {
+    // return 204 (success with no content)
+    res.status(204).josn({ message: "No Employees Found" });
+  }
+  // if employees found, send them
+  res.json(employees);
 };
 
 // add an employee to the file
-const createNewEmployee = (req, res) => {
-  // create employee obj
-  const newEmployee = {
-    // take the id of the last employee and add 1 to it
-    id: data.employees[data.employees.length - 1].id + 1 || 1,
-    name: req.body.name,
-    age: req.body.age,
-  };
-
-  // if name or age was not sent for some reason
-  if (!newEmployee.name || !newEmployee.age) {
-    return res
-      .status(400)
-      .json({ message: "Error! name and age are required" });
+const createNewEmployee = async (req, res) => {
+  // MONGO DB :
+  // if no name or age were found in the body, send 400 (bad request)
+  if (!req?.body?.name || !req?.body?.age) {
+    return res.status(400).josn({ message: "Name and Age are Required" });
   }
-
-  // set data to the new employee
-  // ... = instead of data.setEmployees.id , data.setEmolyees.name etc...
-  data.setEmployees([...data.employees, newEmployee]);
-  res.status(201).json(data.employees); // 201 == created new record successfully
+  // if name and age found, create employee and send res
+  try {
+    const result = await Employee.create({
+      name: req.body.name,
+      age: req.body.age,
+    });
+    // 201 : created successfully
+    res.sendStatus(201).josn(result);
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 // update an existing employee
-const updateEmployee = (req, res) => {
-  // get the id of the employee we want to update
-  const employee = data.employees.find(
-    (emp) => emp.id === parseInt(req.body.id)
-  );
-  // if id not found send error message
+const updateEmployee = async (req, res) => {
+  // if no id was found in the request body, send 400 (bad request)
+  if (!req?.body?.id) {
+    return res.status(400).josn({ message: "ID parameter is required " });
+  }
+
+  // find employee with id matched with the id from the body
+  const employee = await Employee.findOne({ _id: req.body.id }).exec();
+
+  // if no employee was found
   if (!employee) {
     return res
-      .status(400)
+      .status(204) // successful but no content to return
       .json({ message: `Employee ID ${req.body.id} was not found` });
   }
   // if found , start updating after checking for name and age
-  if (req.body.name) employee.name = req.body.name;
-  if (req.body.age) employee.age = req.body.age;
+  if (req?.body?.name) employee.name = req.body.name;
+  if (req?.body?.age) employee.age = req.body.age;
 
-  // now we filter the data by creating an array that doesn't have the employee
-  const filteredArray = data.employees.filter(
-    (emp) => emp.id !== parseInt(req.body.id)
-  );
-  // now , we insert the updated employee to the filteredArray
-  const unsortedArray = [...filteredArray, employee];
-  // finally, the data is not sorted, so we need to sort it
-  data.setEmployees(
-    unsortedArray.sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0))
-  );
+  // save changes after update
+  const result = await employee.save();
+
   // send the employee after updation
-  res.json(data.employees);
+  res.json(employee);
 };
 
 // delete an employee by id
-const deleteEmployee = (req, res) => {
-  // get the id of the employee we want to delete
-  const employee = data.employees.find(
-    (emp) => emp.id === parseInt(req.body.id)
-  );
-  // if id not found send error message
+const deleteEmployee = async (req, res) => {
+  // if no id was found in the request body, send 400 (bad request)
+  if (!req?.body?.id) {
+    return res.status(400).josn({ message: "ID parameter is required " });
+  }
+  const employee = await Employee.findOne({ _id: req.body.id }).exec();
+  // if no employee was found
   if (!employee) {
     return res
-      .status(400)
+      .status(204) // successful but no content to return
       .json({ message: `Employee ID ${req.body.id} was not found` });
   }
 
-  // if found, we filter the data by creating an array that doesn't have the employee
-  const filteredArray = data.employees.filter((emp) => emp.id !== req.body.id);
-  // since its delete, we just update the employees with the new array
-  data.setEmployees([...filteredArray]);
-  // and send the employee after deletion
-  res.json(data.employees);
+  const result = await employee.deleteOne({ _id: req.body.id });
+
+  res.json(result);
 };
 
-const getEmployee = (req, res) => {
+const getEmployee = async (req, res) => {
+  // if no id was found in the request body, send 400 (bad request)
+  if (!req?.params?.id) {
+    return res.status(400).josn({ message: "ID parameter is required " });
+  }
+
   // get the id of the employee we want to show
-  const employee = data.employees.find(
-    // notice here its req.params , because we're pulling parameter out of the url
-    (emp) => emp.id === parseInt(req.params.id)
-  );
-  // if id not found send error message
+  const employee = await Employee.findOne({ _id: req.params.id }).exec();
+  // if no employee was found
   if (!employee) {
     return res
-      .status(400)
-      .json({ message: `Employee ID ${req.body.id} was not found` });
+      .status(204) // successful but no content to return
+      .json({ message: `Employee ID ${req.params.id} was not found` });
   }
 
   // since its just get , return the employee found

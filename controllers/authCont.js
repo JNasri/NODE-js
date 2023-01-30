@@ -1,23 +1,25 @@
 // this controller to authenticate users (when logging in)
 // this file was created after the registerCont.js
 
-// to clone a database, we will create a usersDB object
-// that will contain the users and a method to set the users
-const usersDB = {
-  users: require("../model/users.json"),
-  setUsers: function (data) {
-    this.users = data;
-  },
-};
+// MongoDB CODE:
+const User = require("./../model/User");
+// UPDATE: no need for the below code because we switched to MongoDB
+// const usersDB = {
+//   users: require("../model/users.json"),
+//   setUsers: function (data) {
+//     this.users = data;
+//   },
+// };
+// // import needed modules
+// const fsP = require("fs").promises;
+// const path = require("path");
+//
 
 // import bcrypt to unhash password
 const bcrypt = require("bcrypt");
 
 // the below import is from the JWT learning section
 const jwt = require("jsonwebtoken");
-// we need fs to clone a database (still no DB at this point)
-const fsP = require("fs").promises;
-const path = require("path");
 
 const handleLogin = async (req, res) => {
   // get the username and password (probably from a login form)
@@ -29,14 +31,14 @@ const handleLogin = async (req, res) => {
       .json({ message: "Username & Password are required" });
   }
   // Evaluate Username
-  const foundUser = usersDB.users.find((person) => person.Username === user);
+  const foundUser = await User.findOne({ username: user }).exec();
   if (!foundUser) {
     return res.sendStatus(401); // 401 * unAuthorized *
   }
 
   // Evaluate Password
   // compare the password given with the passowrd of the foundUser
-  const match = await bcrypt.compare(pwd, foundUser.Password);
+  const match = await bcrypt.compare(pwd, foundUser.password);
   if (match) {
     // here we must get the user roles of the found user
     const UserRoles = Object.values(foundUser.roles);
@@ -48,7 +50,7 @@ const handleLogin = async (req, res) => {
       // UPDATED: add the user roles to the payload
       {
         UserInfo: {
-          Username: foundUser.Username,
+          username: foundUser.username,
           roles: UserRoles,
         },
       },
@@ -61,7 +63,7 @@ const handleLogin = async (req, res) => {
     //
     const refreshToken = jwt.sign(
       // 1: payload (our username) , do not pass sensitive info (like pwd)
-      { Username: foundUser.Username },
+      { username: foundUser.username },
       // 2: we need the refresh token secret to create a token
       process.env.REFRESH_TOKEN_SECRET,
       // 3: expiration time
@@ -73,20 +75,27 @@ const handleLogin = async (req, res) => {
     // before the expire time ( 1 day )
     //
 
-    // seperate other users from the logged in user
-    const otherUsers = usersDB.users.filter(
-      (person) => person.Username !== foundUser.Username
-    );
-    // add the refrethTokin to the logged in user's json object
-    const currentUser = { ...foundUser, refreshToken };
-    // update the DB by : other users + current user
-    usersDB.setUsers([...otherUsers, currentUser]);
-    // store all in the DB ( in our case a txt file) with the refresh token added
-    // to the current user
-    await fsP.writeFile(
-      path.join(__dirname, "..", "model", "users.json"),
-      JSON.stringify(usersDB.users)
-    );
+    // add the refresh token to the logged in user
+    foundUser.refreshToken = refreshToken;
+    // save after adding refresh token to foundUser
+    const result = await foundUser.save();
+    // for testing
+    console.log(result);
+
+    // THE FOLLOWING IS OLD CODE BEFORE MONGODB
+    // const otherUsers = usersDB.users.filter(
+    //   (person) => person.Username !== foundUser.Username
+    // );
+    // // add the refrethTokin to the logged in user's json object
+    // const currentUser = { ...foundUser, refreshToken };
+    // // update the DB by : other users + current user
+    // usersDB.setUsers([...otherUsers, currentUser]);
+    // // store all in the DB ( in our case a txt file) with the refresh token added
+    // // to the current user
+    // await fsP.writeFile(
+    //   path.join(__dirname, "..", "model", "users.json"),
+    //   JSON.stringify(usersDB.users)
+    // );
 
     // fianlly, we need to send both tokens to the user ,
     // refreshToken as a cookie and accessToken as JSON
@@ -98,7 +107,7 @@ const handleLogin = async (req, res) => {
         httpOnly: true, // httpOnly cookie : to not allow access by JS
         maxAge: 24 * 60 * 60 * 1000, // this is equal to 1 day
         sameSite: "None", // added new (for the front end )
-        secure: true, // added new (for the front end ) so it be http(s)
+        // secure: true, // added new (for the front end ) so it be http(s)
         // note that secure: true doesn't work with thoudnerClinet (dev test)
         // but will work in real porjects
       }

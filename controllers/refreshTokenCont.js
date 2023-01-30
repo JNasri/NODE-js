@@ -2,19 +2,20 @@
 
 // this controller is to handle refresh tokens
 
-// to clone a database, we will create a usersDB object
-// that will contain the users and a method to set the users
-const usersDB = {
-  users: require("../model/users.json"),
-  setUsers: function (data) {
-    this.users = data;
-  },
-};
+// MongoDB CODE:
+const User = require("./../model/User");
+// UPDATE: no need for the below code because we switched to MongoDB
+// const usersDB = {
+//   users: require("../model/users.json"),
+//   setUsers: function (data) {
+//     this.users = data;
+//   },
+// };
 
 // the below import is from the JWT learning section
 const jwt = require("jsonwebtoken");
 
-const handleRefreshToken = (req, res) => {
+const handleRefreshToken = async (req, res) => {
   // get the cookies from the request
   const cookies = req.cookies;
   // if cookies or jwt not found , return error
@@ -27,9 +28,7 @@ const handleRefreshToken = (req, res) => {
   const refreshToken = cookies.jwt;
 
   // Evaluate the token of the user with the token we got
-  const foundUser = usersDB.users.find(
-    (person) => person.refreshToken === refreshToken
-  );
+  const foundUser = await User.findOne({ refreshToken: refreshToken }).exec();
   if (!foundUser) {
     return res.sendStatus(403); // 403 * forbidden *
   }
@@ -43,7 +42,7 @@ const handleRefreshToken = (req, res) => {
     // callback for errors and encoded
     (err, decoded) => {
       // *403 = forbidden* invalid token
-      if (err || foundUser.Username !== decoded.Username)
+      if (err || foundUser.username !== decoded.username)
         return res.sendStatus(403);
       // create a new access token after the refresh token if verified
       //
@@ -55,7 +54,7 @@ const handleRefreshToken = (req, res) => {
         // UPDATED: add the user roles to the payload
         {
           UserInfo: {
-            Username: foundUser.Username,
+            username: foundUser.username,
             roles: UserRoles,
           },
         },

@@ -8,18 +8,19 @@
 
 // this controller is to handle log out
 
-// to clone a database, we will create a usersDB object
-// that will contain the users and a method to set the users
-const usersDB = {
-  users: require("../model/users.json"),
-  setUsers: function (data) {
-    this.users = data;
-  },
-};
-
-// both needed to clone a DB (still using txt instead of DB)
-const fsP = require("fs").promises;
-const path = require("path");
+// MongoDB CODE:
+const User = require("./../model/User");
+// UPDATE: no need for the below code because we switched to MongoDB
+// const usersDB = {
+//   users: require("../model/users.json"),
+//   setUsers: function (data) {
+//     this.users = data;
+//   },
+// };
+// // import needed modules
+// const fsP = require("fs").promises;
+// const path = require("path");
+//
 
 const handleLogout = async (req, res) => {
   // note for the front end: also delete the access token from the memory
@@ -36,9 +37,7 @@ const handleLogout = async (req, res) => {
   const refreshToken = cookies.jwt;
 
   // check if the refresh token is in the DB
-  const foundUser = usersDB.users.find(
-    (person) => person.refreshToken === refreshToken
-  );
+  const foundUser = await User.findOne({ refreshToken: refreshToken }).exec();
   // if the following condition is true, that means we have a cookie
   // but its not in the DB, so we clear the cookie we have
   if (!foundUser) {
@@ -49,19 +48,28 @@ const handleLogout = async (req, res) => {
 
   // if we reach here, that means cookie is found in the DB
 
-  // execlude the user with the refresh token
-  const otherUsers = usersDB.users.filter(
-    (person) => person.refreshToken !== foundUser.refreshToken
-  );
-  // set the refresh token to '' in the foundUser's object
-  const currentUser = { ...foundUser, refreshToken: "" };
-  // add otherUsers with the currentUser after clearing refresh token
-  usersDB.setUsers([...otherUsers, currentUser]);
-  // update the DB ( txt file in our case)
-  await fsP.writeFile(
-    path.join(__dirname, "..", "model", "users.json"),
-    JSON.stringify(usersDB.users)
-  );
+  // delete the refresh token from the user who logged out
+  foundUser.refreshToken = "";
+  // save after removing refresh token from foundUser
+  const result = await foundUser.save();
+  // for testing
+  console.log(result);
+
+  // THE FOLLOWING IS OLD CODE BEFORE MONGODB
+  // const otherUsers = usersDB.users.filter(
+  //   (person) => person.refreshToken !== foundUser.refreshToken
+  // );
+  // // set the refresh token to '' in the foundUser's object
+  // const currentUser = { ...foundUser, refreshToken: "" };
+  // // add otherUsers with the currentUser after clearing refresh token
+  // usersDB.setUsers([...otherUsers, currentUser]);
+  // // update the DB ( txt file in our case)
+  // await fsP.writeFile(
+  //   path.join(__dirname, "..", "model", "users.json"),
+  //   JSON.stringify(usersDB.users)
+  // );
+  //
+  //
 
   // command to clear the cookie after it was deleted form the DB
   res.clearCookie("jwt", {
